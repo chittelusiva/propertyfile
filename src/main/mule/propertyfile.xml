@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d2ba37d1-58e7-497a-9d25-485adcd3cf6f" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="08855ef4-5337-4408-9e84-da62840cb9d6" file="${env}.properties" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="d3f9d597-475e-4b02-b72a-b32bd3047e26" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}"/>
+	</db:config>
+	<global-property doc:name="Global Property" doc:id="2ad17231-5483-4aff-bb7b-e8ef62e9e39d" name="env" value="uat" />
+	<flow name="propertyfileFlow" doc:id="4ad88f66-1b05-4c0b-bff2-28d19ba3d345" >
+		<http:listener doc:name="Listener" doc:id="2f5a61e7-3030-41de-9c4c-bb5c93d9fd89" config-ref="HTTP_Listener_config" path="${http.path}"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ff4e865e-e08f-4edc-af51-9961793662e5" message='#[attributes.requestPath]'/>
+		<db:select doc:name="Select" doc:id="acd4e8d6-5817-42bd-a275-96f13647f5cc" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from contacts;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="4b4de0d1-4a6f-4309-84e8-b76e29daec81" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
